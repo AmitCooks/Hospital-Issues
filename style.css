@@ -663,6 +663,30 @@ button {
     color: var(--gray-500);
 }
 
+.profile-actions {
+    padding: 12px;
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 12px;
+    background: #FEE2E2;
+    color: var(--danger);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: var(--transition);
+}
+
+.logout-btn:hover {
+    background: var(--danger);
+    color: white;
+}
+
 .hidden {
     display: none !important;
 }
