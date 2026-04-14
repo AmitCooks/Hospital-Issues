@@ -36,6 +36,10 @@ function initLoginSystem() {
         };
         
         if (credentials[username] && credentials[username].password === password) {
+            currentUser = {
+                role: credentials[username].dashboard,
+                name: credentials[username].name
+            };
             loginScreen.style.animation = 'fadeOut 0.5s ease forwards';
             setTimeout(() => {
                 loginScreen.style.display = 'none';
@@ -63,9 +67,20 @@ function initLoginSystem() {
     });
 }
 
+function logout() {
+    currentUser = null;
+    const loginScreen = document.getElementById('loginScreen');
+    loginScreen.style.display = 'flex';
+    loginScreen.style.animation = 'fadeIn 0.5s ease forwards';
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    document.getElementById('loginError').style.display = 'none';
+}
+
 let cart = [];
 let currentDashboard = 'patient';
 let selectedDoctor = null;
+let currentUser = null;
 
 const doctorPatients = [
     { id: 'P001', name: 'Rahul Sharma', age: 28, gender: 'Male', phone: '+91 98765 43210', bloodGroup: 'B+', department: 'Cardiology', condition: 'Cardiac Arrhythmia', status: 'admitted', bed: 'Bed 103', admittedDate: '2024-03-10', vitals: { bp: '130/85', heartRate: 88, temp: 98.6, spo2: 97 }, reports: [{ name: 'ECG', status: 'ready' }, { name: 'Blood Test', status: 'processing' }, { name: '2D Echo', status: 'pending' }], history: ['Hypertension (2022)', 'Diabetes Type 2 (2020)'], allergies: ['Penicillin'] },
@@ -665,6 +680,9 @@ function initDashboardSwitcher() {
     
     switcherBtn.addEventListener('click', function(e) {
         e.stopPropagation();
+        if (currentUser) {
+            updateSwitcherOptions();
+        }
         switcherDropdown.classList.toggle('active');
     });
     
@@ -687,7 +705,35 @@ function initDashboardSwitcher() {
     });
 }
 
+function updateSwitcherOptions() {
+    const switcherOptions = document.querySelectorAll('.switcher-option');
+    
+    if (!currentUser) {
+        switcherOptions.forEach(opt => {
+            opt.style.display = 'flex';
+            opt.classList.remove('active');
+        });
+        const patientOpt = document.querySelector('.switcher-option[data-dashboard="patient"]');
+        if (patientOpt) patientOpt.classList.add('active');
+        return;
+    }
+    
+    switcherOptions.forEach(opt => {
+        if (opt.dataset.dashboard === currentUser.role) {
+            opt.style.display = 'flex';
+            opt.classList.add('active');
+        } else {
+            opt.style.display = 'none';
+        }
+    });
+}
+
 function switchDashboard(dashboard) {
+    if (currentUser && currentUser.role !== dashboard) {
+        showToast('warning', 'Access Denied', `You are logged in as ${currentUser.role}. Please logout first.`);
+        return;
+    }
+    
     const patientSections = document.querySelectorAll('.hero, .quick-actions, .doctors-section, .medicines-section, .reports-section, .help-section');
     const footer = document.querySelector('.footer');
     const doctorDashboard = document.getElementById('doctorDashboard');
@@ -730,6 +776,10 @@ function switchDashboard(dashboard) {
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    if (currentUser) {
+        updateSwitcherOptions();
+    }
 }
 
 function updateDashboardDates() {
@@ -1082,6 +1132,14 @@ fadeOutStyle.textContent = `
         to {
             opacity: 0;
             transform: translateX(100%);
+        }
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
         }
     }
     @keyframes spin {
